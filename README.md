@@ -40,6 +40,7 @@ B--8-->ch_8
 B--9-->ch_9
 B--10-->ch_10
 B--11-->ch_11
+B--"12 to 20"-->ch_params
 
 ch_0("kontrol.set_hardware()")
 ch_1("kontrol.savef()") --save to file --> mdict
@@ -73,10 +74,18 @@ end
 
 ch_7("list_comports()<br />Lists serial ports")
 
+
+
+ch_params("aa") --"Update parameters prompt"--> mdict
+
+ch_0 -.-> mdict
+ch_0 --> pdisp_disp("Pdisp.disp<br />") --> pd_disp_cmd("PF{Pdisp.disp}")
+ch_0 --> pdisp_pw("Pdisp.pwidth<br />") --> pd_pw_cmd("PW1{Pdisp.pwidth}")
+ch_0 --> pdisp_sa("Pdisp.strobe_amp<br />") --> pd_sa_cmd("PS4{Pdisp.strobe_amp}")
+ch_0 --> pdisp_sd("Pdisp.strobe_delay<br />") --> pd_sd_cmd("PS1{Pdisp.strobe_delay}")
+
 ch_10("Ping the board") --> cmd_ping("P?ERR")
-
 ch_11("Exit") --> close_serial("close_serial()")
-
 ```
 
 ## Known serial commands
@@ -86,7 +95,19 @@ ch_11("Exit") --> close_serial("close_serial()")
 - `PGD`: continuous dispensing
 - `PN1{packet_length}` then `PGP`: packet dispensing
 - `PC100`: purge (`100` is set as a constant as `PURGE_CONST` -- could this be a time?)
-- `PA1{amp}`: set amplitude to `amp` (+int between 0 and 1023)
+
+### Dispensing settings
+
+A few of these parameters are converted from the prompt from a % (0-100) to a +int value (0-1023); this is detailed below where it applies
+
+- `PA1{amp}`: set amplitude to `amp`. +int (0, 1023) (0%-100% in prompt)
+- `PF{disp}`: dispersion frequency in Hz. +int (10,10000)
+- `PW{pulse_width}`: Pulse width (in % of cycle?). +int (102,1023) (10%-100% in prompt)
+- `PS4{strobe_amp}`: strobe ampitude. +int (0, 1023) (0%-100% in prompt)
+- `PS1{strobe_delay}`: strobe delay in us. Prompt: (0.6-312.5)
+    - Multiplied by `F0`, set to 16.0 (16.0 MHz, clock of the strobe timer)
+    - this makes it an integer between 10 (9.6 rounded up) to 5000
+
 
 ### Triggering
 - `PX0`: internal trigger

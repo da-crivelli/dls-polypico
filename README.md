@@ -1,92 +1,122 @@
 # dls-polypico
 
+A Python interface to the Polypico Dispenser system.
 
+Originally shared by Nikolay Pavlov nikolaypavlov@polypico.com
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+`pipenv install`
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+`pipenv run python LinPolyPiCo-V5.py`
 
-## Add your files
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.diamond.ac.uk/mca67379/dls-polypico.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.diamond.ac.uk/mca67379/dls-polypico/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
 
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+First looks for the platform.
+- if Windows: look at COM ports
+- if Linux: look at `/dev/ttyUSB`
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+It then sets the baud rate to `115200`
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+
+```mermaid
+flowchart LR
+
+A("kontrol.menuk()<br />displays the menu")-->
+B("User input")
+
+B--0-->ch_0
+B--1-->ch_1
+B--2-->ch_2
+B--3-->ch_3
+B--4-->ch_4
+B--5-->ch_5
+B--6-->ch_6
+B--7-->ch_7
+B--8-->ch_8
+B--9-->ch_9
+B--10-->ch_10
+B--11-->ch_11
+
+ch_0("kontrol.set_hardware()")
+ch_1("kontrol.savef()") --save to file --> mdict
+ch_2("kontrol.readf()") --read from file --> mdict
+
+mdict("kontrol.mdict<br />(setup dictionary)")
+
+
+subgraph dispensing["dispensing"]
+    ch_3("start dispensing") --> dispense{"dispersion?"}
+
+    dispense--1-->dispense_cont("Continuous dispensing") --> dc_cmd("PGD")
+    dispense--2-->dispense_packet("Packet dispensing")
+
+    dispense_packet--> dp_cmd("PN1{packet length}") --> dp_cmd_2("PGP")
+
+    ch_4("Stop dispensing") --> stop_cmd("PGS")
+
+    ch_5("Internal trigger") --> int_trig_cmd("PX0")
+    ch_6("External trigger") --> ext_trig_cmd("PX1")
+
+    ch_8("Purge") --> purge_cmd("PC100")
+
+    ch_9("Adjust amplitude") --> amplitude_key{key press} --+--> amp_inc("Increment by AMP_ADJ_DELTA") --> pdisp_amp("PDisp.amp")
+    amplitude_key --"-"--> amp_dec("Decrement by AMP_ADJ_DELTA") -->pdisp_amp
+    
+    pdisp_amp --> pdisp_ampd("ampd = 10.23*PDisp.amp")
+    pdisp_ampd --"clamp between 0 and 1023" -->cmd_amp("PA1{ampd}")
+
+end
+
+ch_7("list_comports()<br />Lists serial ports")
+
+ch_10("Ping the board") --> cmd_ping("P?ERR")
+
+ch_11("Exit") --> close_serial("close_serial()")
+
+```
+
+## Known serial commands
+
+### Dispensing control
+- `PGS`: stops dispensing
+- `PGD`: continuous dispensing
+- `PN1{packet_length}` then `PGP`: packet dispensing
+- `PC100`: purge (`100` is set as a constant as `PURGE_CONST` -- could this be a time?)
+- `PA1{amp}`: set amplitude to `amp` (+int between 0 and 1023)
+
+### Triggering
+- `PX0`: internal trigger
+- `PX1`: external trigger
+
+### Control
+- `P?ERR`: used to "ping" the board. Not sure if an actual command or just used to see if the board responds with an error.
+
 
 ## Usage
+
+TODO 
+
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
 ## Support
+
+TODO
+
 Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
 ## Authors and acknowledgment
+
+TODO
+
 Show your appreciation to those who have contributed to the project.
 
 ## License
+
+TODO -- check with Polypico
 For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.

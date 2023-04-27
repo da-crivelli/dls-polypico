@@ -1,4 +1,4 @@
-# dls-polypico
+# DLSPolypico
 
 A Python interface to the Polypico Dispenser system. 
 
@@ -169,6 +169,5 @@ The project is currently maintained by Davide Crivelli at Diamond Light Source. 
 
 ## License
 
-TODO -- check with Polypico
-For open source projects, say how it is licensed.
+This software is released under a MIT License. See [LICENSE](LICENSE) for more information.
 

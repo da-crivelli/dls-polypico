@@ -2,8 +2,6 @@
 
 A Python interface to the Polypico Dispenser system.
 
-Originally shared by Nikolay Pavlov nikolaypavlov@polypico.com
-
 ## Getting started
 
 `pipenv install`
@@ -133,6 +131,9 @@ Tell people where they can go to for help. It can be any combination of an issue
 ## Authors and acknowledgment
 
 TODO
+
+ * Nikolay Pavlov (nikolaypavlov@polypico.com) - original Python code
+ 
 
 Show your appreciation to those who have contributed to the project.
 

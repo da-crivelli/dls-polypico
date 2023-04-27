@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 serial = "*"
 readchar = "*"
+pyserial = "*"
+pylint = "*"
+black = "*"
 
 [dev-packages]
 
